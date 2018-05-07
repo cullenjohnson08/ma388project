@@ -36,7 +36,7 @@ data = master %>% left_join(batters)
 
 head(data)
 
-# trim out bad datapoints 
+# trim out bad datapoints (NA values) and if the player throws with both hands
 data = data %>%
   filter(!is.na(weight), !is.na(height), !is.na(bats), !is.na(throws), !is.na(debut), !is.na(finalGame), !is.na(cG), !is.na(cAB),
          !is.na(cR), !is.na(cH), !is.na(cRBI), !is.na(cSB), !is.na(cSO), !is.na(LastYear), throws != 'S')
@@ -113,12 +113,19 @@ plot(survfit(cox1), conf.int = TRUE)
 # trim out cR
 
 # second model - note P-Values for batsL and throwsS are both high
-cox2 = coxph(object~ weight + height + bats + throws + cAB + cH + cRBI + cSB + cSO, data = final)
+cox2 = coxph(object~ weight + height + /*bats +*/ throws + cAB + cH + cRBI + cSB + cSO, data = final)
 summary(cox2)
 plot(survfit(cox2), conf.int = TRUE)
 
+# remove bats
+
+# third model - all p-values super low
+cox3 = coxph(object~ weight + height + throws + cAB + cH + cRBI + cSB + cSO, data = final)
+summary(cox3)
+plot(survfit(cox3), conf.int = TRUE)
+
 # try running some predictions
-predictions = predict(cox2, newdata = final, type = "expected") -
+predictions = predict(cox3, newdata = final, type = "expected") -
   final$totalSeasons
 
 # this is probably wrong
@@ -126,8 +133,8 @@ hist(predictions)
 
 
 # Test the proportional hazard assumptions
-cox.zph(cox2)
+cox.zph(cox3)
 
-plot(cox.zph(cox2))
+plot(cox.zph(cox3))
 
-ggcoxzph(cox.zph(cox2))
+ggcoxzph(cox.zph(cox3))
