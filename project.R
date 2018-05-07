@@ -39,7 +39,7 @@ head(data)
 # trim out bad datapoints 
 data = data %>%
   filter(!is.na(weight), !is.na(height), !is.na(bats), !is.na(throws), !is.na(debut), !is.na(finalGame), !is.na(cG), !is.na(cAB),
-         !is.na(cR), !is.na(cH), !is.na(cRBI), !is.na(cSB), !is.na(cSO), !is.na(LastYear))
+         !is.na(cR), !is.na(cH), !is.na(cRBI), !is.na(cSB), !is.na(cSO), !is.na(LastYear), throws != 'S')
 
 # add a boolean (one or zero) whether the players last year is 2016, meaning they are alive, alive being a 0
 final = data %>%
@@ -71,11 +71,32 @@ survfit(object ~ 1, data = final)
 survfit(object ~ bats, data = final) %>%
   ggsurvplot(palette = "Set2",
              risk.table = TRUE,
-             xlab = "Battering Hand",
+             xlab = "Total Seasons",
              legend.labs = c("Both", "Left", "Right"),
-             legend.title = "",
+             legend.title = "Key: ",
              pval = TRUE,
              risk.table.y.test = FALSE)
+
+# Show the survival of players based on batting position
+survfit(object ~ throws, data = final) %>%
+  ggsurvplot(palette = "Set2",
+             risk.table = TRUE,
+             xlab = "Total Seasons",
+             legend.labs = c("Left", "Right"),
+             legend.title = "Key: ",
+             pval = TRUE,
+             risk.table.y.test = FALSE)
+
+# Show the survival of players based on batting position
+survfit(object ~ throws + bats, data = final) %>%
+  ggsurvplot(palette = "Set2",
+             risk.table = TRUE,
+             xlab = "Total Seasons",
+             legend.labs = c("Throws:Left, Bats: Both", "Throws:Left, Bats: Left", "Throws:Left, Bats: Right", "Throws:Right, Bats: Both", "Throws:Right, Bats: Left", "Throws:Right, Bats: Right"), 
+             legend.title = "Key: ",
+             pval = TRUE,
+             risk.table.y.test = FALSE)
+
 
 
 #first model - note P-Values for batsL, throwsS, and cR are all high
@@ -92,8 +113,8 @@ summary(cox2)
 plot(survfit(cox2), conf.int = TRUE)
 
 # Test the proportional hazard assumptions
-cox.zph(cox1)
+cox.zph(cox2)
 
-plot(cox.zph(cox1))
+plot(cox.zph(cox2))
 
-ggcoxzph(cox.zph(cox1))
+ggcoxzph(cox.zph(cox2))
