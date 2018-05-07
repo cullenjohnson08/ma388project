@@ -113,14 +113,14 @@ plot(survfit(cox1), conf.int = TRUE)
 # trim out cR
 
 # second model - note P-Values for batsL and throwsS are both high
-cox2 = coxph(object~ weight + height + /*bats +*/ throws + cAB + cH + cRBI + cSB + cSO, data = final)
+cox2 = coxph(object~ weight + height + bats + throws + cAB + cH + cRBI + cSB + cSO, data = final)
 summary(cox2)
 plot(survfit(cox2), conf.int = TRUE)
 
 # remove bats
 
 # third model - all p-values super low
-cox3 = coxph(object~ weight + height + throws + cAB + cH + cRBI + cSB + cSO, data = final)
+cox3 = coxph(object~ weight + throws + bats, data = final)
 summary(cox3)
 plot(survfit(cox3), conf.int = TRUE)
 
@@ -131,10 +131,11 @@ predictions = predict(cox3, newdata = final, type = "expected") -
 # this is probably wrong
 hist(predictions)
 
-
+15452-3458
 # Test the proportional hazard assumptions
 cox.zph(cox3)
 
+# check null and alternative hyp in lesson 36
 plot(cox.zph(cox3))
 
 ggcoxzph(cox.zph(cox3))
