@@ -77,6 +77,8 @@ survfit(object ~ bats, data = final) %>%
              pval = TRUE,
              risk.table.y.test = FALSE)
 
+survdiff(object ~ bats, data = final)
+
 # Show the survival of players based on batting position
 survfit(object ~ throws, data = final) %>%
   ggsurvplot(palette = "Set2",
@@ -86,6 +88,8 @@ survfit(object ~ throws, data = final) %>%
              legend.title = "Key: ",
              pval = TRUE,
              risk.table.y.test = FALSE)
+
+survdiff(object ~ throws, data = final)
 
 # Show the survival of players based on batting position
 survfit(object ~ throws + bats, data = final) %>%
@@ -97,6 +101,7 @@ survfit(object ~ throws + bats, data = final) %>%
              pval = TRUE,
              risk.table.y.test = FALSE)
 
+survdiff(object ~ throws + bats, data = final)
 
 
 #first model - note P-Values for batsL, throwsS, and cR are all high
@@ -111,6 +116,14 @@ plot(survfit(cox1), conf.int = TRUE)
 cox2 = coxph(object~ weight + height + bats + throws + cAB + cH + cRBI + cSB + cSO, data = final)
 summary(cox2)
 plot(survfit(cox2), conf.int = TRUE)
+
+# try running some predictions
+predictions = predict(cox2, newdata = final, type = "expected") -
+  final$totalSeasons
+
+# this is probably wrong
+hist(predictions)
+
 
 # Test the proportional hazard assumptions
 cox.zph(cox2)
