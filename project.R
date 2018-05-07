@@ -42,18 +42,20 @@ data = data %>%
          !is.na(cR), !is.na(cH), !is.na(cRBI), !is.na(cSB), !is.na(cSO), !is.na(LastYear))
 
 # add a boolean (one or zero) whether the players last year is 2016, meaning they are alive, alive being a 0
-data = data %>%
+final = data %>%
   mutate(isIn = ifelse(LastYear > 2015, 0, 1))
 
+head(final)
+
 # seperate for inspection purposes
-playersIn = data %>%
+playersIn = final %>%
   filter(isIn == 0)
 
-playersOut = data %>%
+playersOut = final %>%
   filter(isIn == 1)
 
 # build the object to start our model based on the players total seasons and whether or not they are "alive"
-object = Surv(data$totalSeasons, data$isIn)
+object = Surv(final$totalSeasons, final$isIn)
 object
 
 # build out kaplan meier object
@@ -62,14 +64,36 @@ summary(km)
 
 plot(km, conf.int = TRUE)
 
+
+survfit(object ~ 1, data = final)
+
+# Show the survival of players based on batting position
+survfit(object ~ bats, data = final) %>%
+  ggsurvplot(palette = "Set2",
+             risk.table = TRUE,
+             xlab = "Battering Hand",
+             legend.labs = c("Both", "Left", "Right"),
+             legend.title = "",
+             pval = TRUE,
+             risk.table.y.test = FALSE)
+
+
 #first model - note P-Values for batsL, throwsS, and cR are all high
-cox1 = coxph(object~ weight + height + bats + throws + cAB + cR + cH + cRBI + cSB + cSO, data = data)
+cox1 = coxph(object~ weight + height + bats + throws + cAB + cR + cH + cRBI + cSB + cSO, data = final)
 summary(cox1)
 plot(survfit(cox1), conf.int = TRUE)
 
-#trim out cR
+
+# trim out cR
 
 # second model - note P-Values for batsL and throwsS are both high
-cox2 = coxph(object~ weight + height + bats + throws + cAB + cH + cRBI + cSB + cSO, data = data)
+cox2 = coxph(object~ weight + height + bats + throws + cAB + cH + cRBI + cSB + cSO, data = final)
 summary(cox2)
 plot(survfit(cox2), conf.int = TRUE)
+
+# Test the proportional hazard assumptions
+cox.zph(cox1)
+
+plot(cox.zph(cox1))
+
+ggcoxzph(cox.zph(cox1))
