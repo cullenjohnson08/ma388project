@@ -26,7 +26,7 @@ head(master)
 # Input and select desired data from the Batting.csv
 batters =
   batters %>% group_by(playerID) %>%
-  summarise(cG = sum(G), cAB = sum(AB), cR = sum(R), cH = sum(H), cRBI = sum(RBI), cSB = sum(SB), cSO = sum(SO), LastYear = max(yearID), totalSeasons = sum(!is.na(playerID)))
+  summarise(LastYear = max(yearID), totalSeasons = sum(!is.na(playerID)))
 
 head(batters)
 
@@ -38,8 +38,7 @@ head(data)
 
 # trim out bad datapoints (NA values) and if the player throws with both hands
 data = data %>%
-  filter(!is.na(weight), !is.na(height), !is.na(bats), !is.na(throws), !is.na(debut), !is.na(finalGame), !is.na(cG), !is.na(cAB),
-         !is.na(cR), !is.na(cH), !is.na(cRBI), !is.na(cSB), !is.na(cSO), !is.na(LastYear), throws != 'S')
+  filter(!is.na(weight), !is.na(height), !is.na(bats), !is.na(throws), !is.na(debut), !is.na(finalGame), !is.na(LastYear), throws != 'S')
 
 # add a boolean (one or zero) whether the players last year is 2016, meaning they are alive, alive being a 0
 final = data %>%
@@ -104,34 +103,33 @@ survfit(object ~ throws + bats, data = final) %>%
 survdiff(object ~ throws + bats, data = final)
 
 
-#first model - note P-Values for batsL, throwsS, and cR are all high
-cox1 = coxph(object~ weight + height + bats + throws + cAB + cR + cH + cRBI + cSB + cSO, data = final)
+#first model - note P-Value for height is the highest
+cox1 = coxph(object~ weight + height + bats + throws, data = final)
 summary(cox1)
 plot(survfit(cox1), conf.int = TRUE)
 
 
-# trim out cR
+# trim out height
 
 # second model - note P-Values for batsL and throwsS are both high
-cox2 = coxph(object~ weight + height + bats + throws + cAB + cH + cRBI + cSB + cSO, data = final)
+cox2 = coxph(object~ weight + bats + throws, data = final)
 summary(cox2)
 plot(survfit(cox2), conf.int = TRUE)
 
-# remove bats
-
-# third model - all p-values super low
-cox3 = coxph(object~ weight + throws + bats, data = final)
+# remove weight
+cox3 = coxph(object~ bats + throws, data = final)
 summary(cox3)
 plot(survfit(cox3), conf.int = TRUE)
 
+
 # try running some predictions
-predictions = predict(cox3, newdata = final, type = "expected") -
+predictions = predict(cox1, newdata = final, type = "expected") -
   final$totalSeasons
 
 # this is probably wrong
 hist(predictions)
 
-15452-3458
+
 # Test the proportional hazard assumptions
 cox.zph(cox3)
 
