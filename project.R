@@ -53,6 +53,11 @@ playersIn = final %>%
 playersOut = final %>%
   filter(isIn == 1)
 
+longestPlayers = final %>%
+  filter(totalSeasons > 20)
+
+longestPlayers
+
 # build the object to start our model based on the players total seasons and whether or not they are "alive"
 object = Surv(final$totalSeasons, final$isIn)
 object
@@ -126,14 +131,17 @@ plot(survfit(cox3), conf.int = TRUE)
 predictions = predict(cox1, newdata = final, type = "expected") -
   final$totalSeasons
 
-# this is probably wrong
-hist(predictions)
+summary(predictions)
 
+# this is probably wrong
+hist(predictions,
+     xlab = "Total Seasons",
+     ylab = "Number of predictions")
 
 # Test the proportional hazard assumptions
-cox.zph(cox3)
+cox.zph(cox1)
 
 # check null and alternative hyp in lesson 36
-plot(cox.zph(cox3))
+plot(cox.zph(cox1))
 
-ggcoxzph(cox.zph(cox3))
+ggcoxzph(cox.zph(cox1))
